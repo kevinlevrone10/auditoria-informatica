@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import './index.css'
-import image from './images/MONITOREO.PNG';
+import image from './images/MONITOREO.PNG'
 
 function App() {
   const [activeTab, setActiveTab] = useState("procedure")
@@ -22,19 +22,34 @@ function App() {
     nombreValidador: "",
     resultadoPruebas: "",
     observaciones: "",
-    planReversion: "no"
+    planReversion: "no",
+    fechaRevision: "",
+    resultadoRevision: "",
+    comentariosComite: "",
+    aprobacionAdicional: false
   })
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target
+    const { name, value, type, checked } = e.target
     setFormData(prevState => ({
       ...prevState,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }))
   }
 
   const toggleAccordionItem = (itemValue) => {
     setActiveAccordionItem(prevState => prevState === itemValue ? "" : itemValue)
+  }
+
+  const handleSubmit = (formType) => {
+    alert(`Formulario de ${formType} enviado con éxito`)
+    setFormData({
+      ...formData,
+      [formType === 'solicitud' ? 'fechaSolicitud' : formType === 'impacto' ? 'fechaAnalisis' : formType === 'validacion' ? 'fechaValidacion' : 'fechaRevision']: "",
+      [formType === 'solicitud' ? 'solicitante' : formType === 'impacto' ? 'analistaTI' : formType === 'validacion' ? 'nombreValidador' : 'resultadoRevision']: "",
+      [formType === 'solicitud' ? 'descripcionCambio' : formType === 'impacto' ? 'descripcionCambioImpacto' : formType === 'validacion' ? 'resultadoPruebas' : 'comentariosComite']: "",
+      [formType === 'solicitud' ? 'impactoEsperado' : formType === 'impacto' ? 'impactoSeguridad' : formType === 'validacion' ? 'observaciones' : 'aprobacionAdicional']: formType === 'solicitud' ? "bajo" : formType === 'revision' ? false : "",
+    })
   }
 
   return (
@@ -241,13 +256,16 @@ function App() {
           <h3 className="text-lg font-semibold mb-4">Formularios de Control de Cambios</h3>
           <div className="mb-4">
             <div className="flex border-b">
-              {["solicitud", "impacto", "validacion"].map((tab) => (
+              {["solicitud", "impacto", "revision", "validacion"].map((tab) => (
                 <button
                   key={tab}
                   className={`px-4 py-2 ${activeFormTab === tab ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
                   onClick={() => setActiveFormTab(tab)}
                 >
-                  {tab === "solicitud" ? "Solicitud de Cambio" : tab === "impacto" ? "Análisis de Impacto" : "Validación de Cambios"}
+                  {tab === "solicitud" ? "Solicitud de Cambio" : 
+                   tab === "impacto" ? "Análisis de Impacto" : 
+                   tab === "revision" ? "Revisión y Aprobación" :
+                   "Validación de Cambios"}
                 </button>
               ))}
             </div>
@@ -307,7 +325,10 @@ function App() {
                     ))}
                   </div>
                 </div>
-                <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                <button 
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  onClick={() => handleSubmit('solicitud')}
+                >
                   Enviar Solicitud
                 </button>
               </div>
@@ -403,8 +424,79 @@ function App() {
                     onChange={handleInputChange}
                   />
                 </div>
-                <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                <button 
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  onClick={() => handleSubmit('impacto')}
+                >
                   Enviar Análisis
+                </button>
+              </div>
+            </div>
+          )}
+          {activeFormTab === "revision" && (
+            <div>
+              <h4 className="text-lg font-semibold mb-4">Formulario de Revisión y Aprobación</h4>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="fechaRevision">Fecha de revisión</label>
+                  <input
+                    type="date"
+                    id="fechaRevision"
+                    name="fechaRevision"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                    value={formData.fechaRevision}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Comité de Control de Cambios de TI (CCCTI):</label>
+                  <div className="mt-2 space-y-2">
+                    {["Aprobado", "Rechazado", "Aprobado con modificaciones"].map((result) => (
+                      <div key={result} className="flex items-center">
+                        <input
+                          id={result}
+                          name="resultadoRevision"
+                          type="radio"
+                          className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300"
+                          checked={formData.resultadoRevision === result}
+                          onChange={() => setFormData({...formData, resultadoRevision: result})}
+                        />
+                        <label htmlFor={result} className="ml-3 block text-sm font-medium text-gray-700">
+                          {result}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="comentariosComite">Comentarios del comité</label>
+                  <textarea
+                    id="comentariosComite"
+                    name="comentariosComite"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                    value={formData.comentariosComite}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="aprobacionAdicional"
+                      checked={formData.aprobacionAdicional}
+                      onChange={handleInputChange}
+                      className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                    />
+                    <span className="ml-2 block text-sm font-medium text-gray-700">
+                      Aprobación adicional (Sí, aprobado por Gerencia de TI)
+                    </span>
+                  </label>
+                </div>
+                <button 
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  onClick={() => handleSubmit('revision')}
+                >
+                  Enviar Revisión
                 </button>
               </div>
             </div>
@@ -474,7 +566,10 @@ function App() {
                     ))}
                   </div>
                 </div>
-                <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                <button 
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  onClick={() => handleSubmit('validacion')}
+                >
                   Enviar Validación
                 </button>
               </div>
